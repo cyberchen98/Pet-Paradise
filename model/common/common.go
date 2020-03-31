@@ -22,7 +22,7 @@ func (d *Table) Select(dest interface{}, query string, args ...interface{}) erro
 	return d.GetDB().Select(dest, query, args...)
 }
 
-func (d *Table) UpdateById(keys []string, id string, args ...interface{}) (sql.Result, error) {
+func (d *Table) UpdateById(keys []string, id int, args ...interface{}) (sql.Result, error) {
 	query := "UPDATE `" + d.TableName + "` SET "
 	query += makeUpdaters(keys)
 	query += " WHERE id=?"
@@ -38,8 +38,8 @@ func (d *Table) Insert(fields map[string]interface{}) (sql.Result, error) {
 	return ret, err
 }
 
-func (d *Table) DeleteById(id string) error {
-	_, err := d.UpdateById([]string{"is_delete"}, id, "1")
+func (d *Table) DeleteById(id int) error {
+	_, err := d.UpdateById([]string{"is_deleted"}, id, "1")
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func makeSelectors(keys []string) string {
 }
 
 func makeUpdaters(keys []string) string {
-	str := " ("
+	str := ""
 	for i, v := range keys {
 		if i > 0 {
 			str += ","
@@ -98,7 +98,7 @@ func makeUpdaters(keys []string) string {
 		str += v + "=?"
 	}
 	str += ",update_time=?"
-	return str + ") "
+	return str
 }
 
 func whereCauseIn(params []string, fieldName string) (string, []interface{}) {

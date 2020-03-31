@@ -1,3 +1,7 @@
 package main
 
-const VERSION = "1.0.0"
+var VERSION = "1.0.0"
+
+func ConfigureProductVersion(v string) {
+	VERSION = v
+}

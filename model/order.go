@@ -1,17 +1,12 @@
 package model
 
 import (
-	"fmt"
-	"math/rand"
 	db "pet-paradise/model/common"
-	"time"
 )
 
 type orderTable struct {
 	db.Table
 }
-
-const ORDER_PREFIX_FORMAT = "20060102150405"
 
 var OrderTable = &orderTable{db.Table{
 	GetDB:     db.Conn,
@@ -19,28 +14,27 @@ var OrderTable = &orderTable{db.Table{
 }}
 
 type OrderInfo struct {
-	ID         string `db:"id" json:"id"`
-	OrderID    string `db:"oid" json:"oid"`
-	UserID     string `db:"uid" json:"uid"`
-	ProductID  string `db:"pid" json:"pid"`
+	ID         int    `db:"id" json:"id"`
+	UserID     int    `db:"uid" json:"uid"`
+	ProductID  int    `db:"pid" json:"pid"`
+	AddressID  int    `db:"aid" json:"aid"`
 	Status     string `db:"status" json:"status"`
-	Address    string `db:"address" json:"address"`
 	Details    string `db:"details" json:"details"`
 	CreateTime string `db:"create_time" json:"create_time"`
 	UpdateTime string `db:"update_time" json:"update_time"`
 }
 
-func (o *orderTable) GetAllByUserId(uid string) ([]string, error) {
-	query := "SELECT id FROM `" + o.TableName + "` WHERE uid=? AND is_deleted=0"
-	var ids []string
-	if err := o.Select(ids, query, uid); err != nil {
+func (o *orderTable) GetAllByUserId(uid int) ([]ProductInfo, error) {
+	query := "SELECT id, uid, pid, aid, status, address, details, create_time, update_time FROM `" + o.TableName + "` WHERE uid=? AND is_deleted=0"
+	var infoSlice []ProductInfo
+	if err := o.Select(&infoSlice, query, uid); err != nil {
 		return nil, err
 	}
-	return ids, nil
+	return infoSlice, nil
 }
 
-func (o *orderTable) GetOneById(id string) (*OrderInfo, error) {
-	query := "SELECT id, oid, uid, pid, status, address, details, create_time, update_time FROM `" + o.TableName + "` WHERE id=?"
+func (o *orderTable) GetOneById(id int) (*OrderInfo, error) {
+	query := "SELECT id, uid, pid, aid, status, details, create_time, update_time FROM `" + o.TableName + "` WHERE is_deleted='0' AND id=?"
 	info := &OrderInfo{}
 	if err := o.Get(info, query, id); err != nil {
 		return nil, err
@@ -50,7 +44,6 @@ func (o *orderTable) GetOneById(id string) (*OrderInfo, error) {
 
 func (o *orderTable) InsertNewOrderInfo(orderInfo OrderInfo) error {
 	m := make(map[string]interface{})
-	m["oid"] = time.Now().Format(ORDER_PREFIX_FORMAT) + _generateRandomNumberInString()
 	m["aid"] = orderInfo.Address
 	m["uid"] = orderInfo.UserID
 	m["pid"] = orderInfo.ProductID
@@ -63,21 +56,17 @@ func (o *orderTable) InsertNewOrderInfo(orderInfo OrderInfo) error {
 	return nil
 }
 
-func (a *addressTable) UpdateOrderInfoById(addressInfo map[string]interface{}, id string) error {
+func (a *addressTable) UpdateOrderInfoById(addressInfo map[string]interface{}, id int) error {
 	keys, values := _updateFiled(addressInfo)
-	if _, err := a.UpdateById(keys, id, values); err != nil {
+	if _, err := a.UpdateById(keys, id, values...); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *addressTable) DeleteOrderInfoById(id string) error {
+func (a *addressTable) DeleteOrderInfoById(id int) error {
 	if err := a.DeleteById(id); err != nil {
 		return err
 	}
 	return nil
-}
-
-func _generateRandomNumberInString() string {
-	return fmt.Sprintf("%06v", rand.New(rand.NewSource(time.Now().UnixNano())).Int31n(1000000))
 }

@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -26,5 +27,6 @@ func connectDatabase(host, user, password, dbname string, port int) (*sqlx.DB, e
 func ConfigureMysqlDatabase(host string, port int, user, password, dbname string) error {
 	var err error
 	mysql, err = connectDatabase(host, user, password, dbname, port)
+	fmt.Println(err)
 	return err
 }

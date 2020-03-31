@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"github.com/satori/go.uuid"
 	db "pet-paradise/model/common"
 	"time"
 )
@@ -17,38 +16,29 @@ var ProductTable = &userTable{db.Table{
 }}
 
 type ProductInfo struct {
-	ID                string `db:"id" json:"id"`
-	ProductID         string `db:"pid" json:"pid"`
+	ID                int    `db:"id" json:"id"`
 	ProductName       string `db:"product_name" json:"name"`
 	ParentProductName string `db:"parent_product_name" json:"parent_product_name"`
 	Price             string `db:"price" json:"price"`
+	Describe          string `db:"describe" json:"describe"`
 	Count             int    `db:"count_remains" json:"count"`
-	IsOnSale          bool   `db:"-" json:"is_on_sale"`
-	IsOnDiscount      bool   `db:"-" json:"is_on_discount"`
+	IsOnSale          string `db:"-" json:"is_on_sale"`
+	IsOnDiscount      string `db:"-" json:"is_on_discount"`
 	Details           string `db:"details" json:"details"`
 	CreateTime        string `db:"create_time" json:"create_time"`
 	UpdateTime        string `db:"update_time" json:"update_time"`
-}
-
-func (p *productTable) GetAllProductIds(whereCause string) ([]string, error) {
-	query := "SELECT id FROM `" + p.TableName + "` WHERE is_deleted=0" + whereCause
-	var ids []string
-	if err := p.Select(ids, query); err != nil {
-		return nil, err
-	}
-	return ids, nil
 }
 
 func (p *productTable) GetOneByName(productName string) (*ProductInfo, error) {
 	return p.getOne("product_name", productName)
 }
 
-func (p *productTable) GetOneById(id string) (*ProductInfo, error) {
+func (p *productTable) GetOneById(id int) (*ProductInfo, error) {
 	return p.getOne("id", id)
 }
 
-func (p *productTable) getOne(key, value string) (*ProductInfo, error) {
-	query := "SELECT id, pid, product_name, parent_product_name, price, count_remains, create_time, update_time FROM `" + p.TableName + "` WHERE %s=?"
+func (p *productTable) getOne(key, value interface{}) (*ProductInfo, error) {
+	query := "SELECT id, product_name, parent_product_name, price, describe, count_remains, create_time, update_time FROM `" + p.TableName + "` WHERE is_deleted='0' AND %s=?"
 	info := &ProductInfo{}
 	if err := p.Get(info, fmt.Sprintf(query, key), value); err != nil {
 		return nil, err
@@ -58,7 +48,6 @@ func (p *productTable) getOne(key, value string) (*ProductInfo, error) {
 
 func (p *productTable) InsertNewProductInfo(productInfo ProductInfo) error {
 	m := make(map[string]interface{})
-	m["pid"] = uuid.NewV4().String()
 	m["product_name"] = productInfo.ProductName
 	m["parent_product_name"] = productInfo.ParentProductName
 	m["price"] = productInfo.Price
@@ -71,24 +60,56 @@ func (p *productTable) InsertNewProductInfo(productInfo ProductInfo) error {
 	return nil
 }
 
-func (p *productTable) AddProductCountById(id string, count int) error {
-	if err := p.UpdateProductInfoById(map[string]interface{}{
-		"count": count,
+func (p *productTable) AddProductCountById(id int, count int) error {
+	if info, err := p.GetOneById(id); err != nil {
+		return err
+	} else {
+		count += info.Count
+	}
+	if err := p.UpdateProductInfoById(ProductInfo{
+		Count: count,
 	}, id); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *productTable) UpdateProductInfoById(productInfo map[string]interface{}, id string) error {
-	keys, values := _updateFiled(productInfo)
-	if _, err := p.UpdateById(keys, id, values); err != nil {
+func (p *productTable) UpdateProductInfoById(productInfo ProductInfo, id int) error {
+	var productInfoMap = make(map[string]interface{})
+
+	if productInfo.ProductName != "" {
+		productInfoMap["product_name"] = productInfo.ProductName
+	}
+	if productInfo.ParentProductName != "" {
+		productInfoMap["parent_product_name"] = productInfo.ParentProductName
+	}
+	if productInfo.Describe != "" {
+		productInfoMap["describe"] = productInfo.Describe
+	}
+	if productInfo.Price != "" {
+		productInfoMap["price"] = productInfo.Price
+	}
+	if productInfo.Details != "" {
+		productInfoMap["details"] = productInfo.Details
+	}
+	if productInfo.Count != 0 {
+		productInfoMap["count_remains"] = productInfo.Count
+	}
+	if productInfo.IsOnDiscount != "" {
+		productInfoMap["is_on_discount"] = productInfo.IsOnDiscount
+	}
+	if productInfo.IsOnSale != "" {
+		productInfoMap["is_on_sale"] = productInfo.IsOnSale
+	}
+
+	keys, values := _updateFiled(productInfoMap)
+	if _, err := p.UpdateById(keys, id, values...); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *productTable) DeleteProductInfoById(id string) error {
+func (p *productTable) DeleteProductInfoById(id int) error {
 	if err := p.DeleteById(id); err != nil {
 		return err
 	}

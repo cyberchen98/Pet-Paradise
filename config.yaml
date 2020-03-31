@@ -7,8 +7,8 @@ log:
 
 # databases
 mysql:
-  host: 7.7.8.8
+  host: 47.100.114.83
   port: 3306
   user: root
-  password: root
+  password: golem
   dbname: pet-paradise

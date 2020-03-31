@@ -5,20 +5,10 @@ import (
 	"time"
 )
 
-var debugLogger *DebugLogger
+var debugLogger = &DebugLogger{}
 
 type DebugLogger struct {
 	Level LogLevel
-}
-
-func NewConsoleLogger(levelStr string) *DebugLogger {
-	level, err := parseLogLevel(levelStr)
-	if err != nil {
-		panic(err)
-	}
-	return &DebugLogger{
-		Level: level,
-	}
 }
 
 func (c *DebugLogger) enable(logLevel LogLevel) bool {

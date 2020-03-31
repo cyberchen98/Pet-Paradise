@@ -24,9 +24,9 @@ type logMsg struct {
 	line      int
 }
 
-var logger Logger
+var _logger logger
 
-type Logger interface {
+type logger interface {
 	Debug(format string, a ...interface{})
 	Info(format string, a ...interface{})
 	Warning(format string, a ...interface{})
@@ -40,8 +40,11 @@ func ConfigureLogger(logLevel, logDir, fileName string, maxSize int64) error {
 		return err
 	}
 	if lvl == DEBUG {
-		debugLogger.Level.SetLogLevel("debug")
-		logger = debugLogger
+		if err := debugLogger.Level.SetLogLevel("debug"); err != nil {
+			return err
+		}
+		_logger = debugLogger
+		return nil
 	}
 	fileLogger = &FileLogger{
 		Level:       lvl,
@@ -49,12 +52,12 @@ func ConfigureLogger(logLevel, logDir, fileName string, maxSize int64) error {
 		fileName:    fileName,
 		maxFileSize: maxSize,
 	}
-	logger = fileLogger
+	_logger = configureFileLogger(logLevel, logDir, fileName, maxSize)
 	return nil
 }
 
-func Log() Logger {
-	return logger
+func Logger() logger {
+	return _logger
 }
 
 type LogLevel int64

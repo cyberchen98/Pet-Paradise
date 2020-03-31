@@ -33,7 +33,7 @@ func ParseConfig(filename string) error {
 	configContent, err := yaml.NewConfigWithFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("config file not found!")
+			return fmt.Errorf("config file not found")
 		}
 		return err
 	}

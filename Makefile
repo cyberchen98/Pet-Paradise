@@ -1,6 +1,6 @@
-.PHONY: server
-server:
-	go build -o build/server 
+.PHONY: build
+build:
+	go build -o build/server cmd/server/*.go
 
 .PHONY: clean
 clean:
