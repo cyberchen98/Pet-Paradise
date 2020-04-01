@@ -10,23 +10,32 @@ type productTable struct {
 	db.Table
 }
 
-var ProductTable = &userTable{db.Table{
+var ProductTable = &productTable{db.Table{
 	GetDB:     db.Conn,
 	TableName: db.TBL_PRODUCT,
 }}
 
 type ProductInfo struct {
 	ID                int    `db:"id" json:"id"`
-	ProductName       string `db:"product_name" json:"name"`
-	ParentProductName string `db:"parent_product_name" json:"parent_product_name"`
-	Price             string `db:"price" json:"price"`
-	Describe          string `db:"describe" json:"describe"`
-	Count             int    `db:"count_remains" json:"count"`
-	IsOnSale          string `db:"-" json:"is_on_sale"`
-	IsOnDiscount      string `db:"-" json:"is_on_discount"`
-	Details           string `db:"details" json:"details"`
+	ProductName       string `db:"product_name" json:"product_name" form:"product_name"`
+	ParentProductName string `db:"parent_product_name" json:"parent_product_name" form:"parent_product_name"`
+	Price             string `db:"price" json:"price" form:"price"`
+	Describe          string `db:"describe" json:"describe" form:"describe"`
+	Count             int    `db:"count_remains" json:"count" form:"count"`
+	IsOnSale          string `db:"is_on_sale" json:"is_on_sale" form:"is_on_sale"`
+	IsOnDiscount      string `db:"is_on_discount" json:"is_on_discount" form:"is_on_discount"`
+	Details           string `db:"details" json:"details" form:"details"`
 	CreateTime        string `db:"create_time" json:"create_time"`
 	UpdateTime        string `db:"update_time" json:"update_time"`
+}
+
+func (p *productTable) SelectByParentProductName(parentProductName string) ([]ProductInfo, error) {
+	query := "SELECT id, product_name, parent_product_name, price, describe, count_remains, create_time, update_time FROM `" + p.TableName + "` WHERE is_deleted='0' AND parent_product_name=?"
+	var info []ProductInfo
+	if err := p.Select(&info, query, parentProductName); err != nil {
+		return nil, err
+	}
+	return info, nil
 }
 
 func (p *productTable) GetOneByName(productName string) (*ProductInfo, error) {
@@ -96,9 +105,15 @@ func (p *productTable) UpdateProductInfoById(productInfo ProductInfo, id int) er
 		productInfoMap["count_remains"] = productInfo.Count
 	}
 	if productInfo.IsOnDiscount != "" {
+		if productInfo.IsOnDiscount != "0" && productInfo.IsOnDiscount != "1" {
+			productInfo.IsOnDiscount = "0"
+		}
 		productInfoMap["is_on_discount"] = productInfo.IsOnDiscount
 	}
 	if productInfo.IsOnSale != "" {
+		if productInfo.IsOnSale != "0" && productInfo.IsOnSale != "1" {
+			productInfo.IsOnSale = "1"
+		}
 		productInfoMap["is_on_sale"] = productInfo.IsOnSale
 	}
 

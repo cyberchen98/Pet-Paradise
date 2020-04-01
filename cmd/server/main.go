@@ -10,7 +10,7 @@ import (
 func main() {
 	fmt.Println(VERSION)
 	fmt.Println("Pet-Paradise Server")
-	if err := config.ParseConfig("./config.yaml"); err != nil {
+	if err := config.ParseConfig("config.yaml"); err != nil {
 		fmt.Printf("%#v", err)
 		return
 	}

@@ -66,7 +66,7 @@ func Register(ctx *gin.Context) {
 	}
 
 	var userInfo model.UserInfo
-	if err := ctx.ShouldBind(&userInfo); err != nil {
+	if err := ctx.Bind(&userInfo); err != nil {
 		utils.Fail(ctx, "invalid params", nil)
 		return
 	}
@@ -173,17 +173,14 @@ func AddAddressInfo(ctx *gin.Context) {
 	log.Logger().Info("[AddAddressInfo] ", ctx.Request.URL)
 
 	userID := ctx.GetInt("user_id")
-	addressInfo := model.UserAddressInfo{
-		UserID:      userID,
-		Province:    ctx.PostForm("province"),
-		City:        ctx.PostForm("city"),
-		Details:     ctx.PostForm("details"),
-		PhoneNumber: ctx.PostForm("phone_number"),
-		Receiver:    ctx.PostForm("receiver"),
-		PostCode:    ctx.PostForm("post_code"),
-	}
 
-	if err := model.AddressTable.InsertNewAddressInfo(addressInfo); err != nil {
+	var newAddressInfo model.UserAddressInfo
+	if err := ctx.Bind(&newAddressInfo); err != nil {
+		utils.Fail(ctx, "invalid params", nil)
+		return
+	}
+	newAddressInfo.UserID = userID
+	if err := model.AddressTable.InsertNewAddressInfo(newAddressInfo); err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
@@ -225,4 +222,16 @@ func GetAllAddress(ctx *gin.Context) {
 	}
 
 	utils.Success(ctx, "ok", addressSlice)
+}
+
+func DeleteAddress(ctx *gin.Context) {
+	log.Logger().Info("[DeleteAddress] ", ctx.Request.URL)
+
+	userID := ctx.GetInt("user_id")
+
+	if err := model.AddressTable.DeleteAddressInfoById(userID); err != nil {
+		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
+		return
+	}
+	utils.Success(ctx, "ok", nil)
 }

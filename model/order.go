@@ -44,11 +44,10 @@ func (o *orderTable) GetOneById(id int) (*OrderInfo, error) {
 
 func (o *orderTable) InsertNewOrderInfo(orderInfo OrderInfo) error {
 	m := make(map[string]interface{})
-	m["aid"] = orderInfo.Address
+	m["aid"] = orderInfo.AddressID
 	m["uid"] = orderInfo.UserID
 	m["pid"] = orderInfo.ProductID
 	m["status"] = orderInfo.Status
-	m["address"] = orderInfo.Address
 	m["details"] = orderInfo.Details
 	if _, err := o.Insert(m); err != nil {
 		return err
@@ -56,16 +55,16 @@ func (o *orderTable) InsertNewOrderInfo(orderInfo OrderInfo) error {
 	return nil
 }
 
-func (a *addressTable) UpdateOrderInfoById(addressInfo map[string]interface{}, id int) error {
+func (o *orderTable) UpdateOrderInfoById(addressInfo map[string]interface{}, id int) error {
 	keys, values := _updateFiled(addressInfo)
-	if _, err := a.UpdateById(keys, id, values...); err != nil {
+	if _, err := o.UpdateById(keys, id, values...); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *addressTable) DeleteOrderInfoById(id int) error {
-	if err := a.DeleteById(id); err != nil {
+func (o *orderTable) DeleteOrderInfoById(id int) error {
+	if err := o.DeleteById(id); err != nil {
 		return err
 	}
 	return nil
