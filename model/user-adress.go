@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	db "pet-paradise/model/common"
 )
 
@@ -51,7 +52,7 @@ func (a *addressTable) SelectByUserId(uid int) ([]UserAddressInfo, error) {
 	return info, nil
 }
 
-func (a *addressTable) InsertNewAddressInfo(addressInfo UserAddressInfo) error {
+func (a *addressTable) InsertNewAddressInfo(addressInfo UserAddressInfo) (sql.Result, error) {
 	m := make(map[string]interface{})
 
 	m["uid"] = addressInfo.UserID
@@ -60,13 +61,10 @@ func (a *addressTable) InsertNewAddressInfo(addressInfo UserAddressInfo) error {
 	m["details"] = addressInfo.Details
 	m["receiver"] = addressInfo.Receiver
 	m["post_code"] = addressInfo.PostCode
-	if _, err := a.Insert(m); err != nil {
-		return err
-	}
-	return nil
+	return a.Insert(m)
 }
 
-func (a *addressTable) UpdateAddressInfoById(addressInfo UserAddressInfo, id int) error {
+func (a *addressTable) UpdateAddressInfoById(addressInfo UserAddressInfo, id int) (sql.Result, error) {
 	var addressInfoMap = make(map[string]interface{})
 
 	if addressInfo.Province != "" {
@@ -89,15 +87,9 @@ func (a *addressTable) UpdateAddressInfoById(addressInfo UserAddressInfo, id int
 	}
 
 	keys, values := _updateFiled(addressInfoMap)
-	if _, err := a.UpdateById(keys, id, values...); err != nil {
-		return err
-	}
-	return nil
+	return a.UpdateById(keys, id, values...)
 }
 
-func (a *addressTable) DeleteAddressInfoById(id int) error {
-	if err := a.DeleteById(id); err != nil {
-		return err
-	}
-	return nil
+func (a *addressTable) DeleteAddressInfoById(id int) (sql.Result, error) {
+	return a.DeleteById(id)
 }

@@ -72,7 +72,7 @@ func Register(ctx *gin.Context) {
 	}
 
 	userInfo.Password = string(hashedPassword)
-	if err := model.UserTable.InsertNewUserInfo(userInfo); err != nil {
+	if _, err := model.UserTable.InsertNewUserInfo(userInfo); err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
@@ -106,7 +106,7 @@ func UpdateUserInfo(ctx *gin.Context) {
 		userNewInfo.Password = ""
 	}
 
-	if err := model.UserTable.UpdateUserInfoById(userNewInfo, userID); err == sql.ErrNoRows {
+	if _, err := model.UserTable.UpdateUserInfoById(userNewInfo, userID); err == sql.ErrNoRows {
 		utils.Fail(ctx, "no this record", nil)
 		return
 	} else if err != nil {
@@ -144,7 +144,7 @@ func UpdateUserPassword(ctx *gin.Context) {
 		return
 	}
 
-	if err := model.UserTable.UpdateUserInfoById(model.UserInfo{
+	if _, err := model.UserTable.UpdateUserInfoById(model.UserInfo{
 		Password: string(hashedPassword),
 	}, userID); err == sql.ErrNoRows {
 		utils.Fail(ctx, "no this record", nil)
@@ -163,7 +163,7 @@ func DeleteUser(ctx *gin.Context) {
 
 	userID := ctx.GetInt("user_id")
 
-	if err := model.UserTable.DeleteUserInfoById(userID); err == sql.ErrNoRows {
+	if _, err := model.UserTable.DeleteUserInfoById(userID); err == sql.ErrNoRows {
 		utils.Fail(ctx, "no this record", nil)
 		return
 	} else if err != nil {
@@ -184,7 +184,7 @@ func AddAddressInfo(ctx *gin.Context) {
 		return
 	}
 	newAddressInfo.UserID = userID
-	if err := model.AddressTable.InsertNewAddressInfo(newAddressInfo); err != nil {
+	if _, err := model.AddressTable.InsertNewAddressInfo(newAddressInfo); err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
@@ -205,7 +205,7 @@ func UpdateAddressInfo(ctx *gin.Context) {
 		return
 	}
 
-	if err := model.AddressTable.UpdateAddressInfoById(newAddressInfo, addressID); err == sql.ErrNoRows {
+	if _, err := model.AddressTable.UpdateAddressInfoById(newAddressInfo, addressID); err == sql.ErrNoRows {
 		utils.Fail(ctx, "no this record", nil)
 		return
 	} else if err != nil {
@@ -236,7 +236,7 @@ func DeleteAddress(ctx *gin.Context) {
 
 	userID := ctx.GetInt("user_id")
 
-	if err := model.AddressTable.DeleteAddressInfoById(userID); err == sql.ErrNoRows {
+	if _, err := model.AddressTable.DeleteAddressInfoById(userID); err == sql.ErrNoRows {
 		utils.Fail(ctx, "no this record", nil)
 		return
 	} else if err != nil {

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"fmt"
 	db "pet-paradise/model/common"
 )
@@ -57,20 +58,17 @@ func (u *userTable) getOne(key, value interface{}) (*UserInfo, error) {
 	return info, nil
 }
 
-func (u *userTable) InsertNewUserInfo(userInfo UserInfo) error {
+func (u *userTable) InsertNewUserInfo(userInfo UserInfo) (sql.Result, error) {
 	m := make(map[string]interface{})
 	m["user_name"] = userInfo.Name
 	m["user_password"] = userInfo.Password
 	m["user_email"] = userInfo.Email
 	m["user_phone"] = userInfo.Phone
 	m["role"] = DEFAULT_ROLE
-	if _, err := u.Insert(m); err != nil {
-		return err
-	}
-	return nil
+	return u.Insert(m)
 }
 
-func (u *userTable) UpdateUserInfoById(userInfo UserInfo, id int) error {
+func (u *userTable) UpdateUserInfoById(userInfo UserInfo, id int) (sql.Result, error) {
 	var userInfoMap = make(map[string]interface{})
 	if userInfo.Role != "" {
 		roleValid := false
@@ -80,7 +78,7 @@ func (u *userTable) UpdateUserInfoById(userInfo UserInfo, id int) error {
 			}
 		}
 		if !roleValid {
-			return fmt.Errorf("invalid role info, must in %v", ROLES)
+			return nil, fmt.Errorf("invalid role info, must in %v", ROLES)
 		}
 		userInfoMap["role"] = userInfo.Role
 	}
@@ -98,17 +96,11 @@ func (u *userTable) UpdateUserInfoById(userInfo UserInfo, id int) error {
 	}
 
 	keys, values := _updateFiled(userInfoMap)
-	if _, err := u.UpdateById(keys, id, values...); err != nil {
-		return err
-	}
-	return nil
+	return u.UpdateById(keys, id, values...)
 }
 
-func (u *userTable) DeleteUserInfoById(id int) error {
-	if err := u.DeleteById(id); err != nil {
-		return err
-	}
-	return nil
+func (u *userTable) DeleteUserInfoById(id int) (sql.Result, error) {
+	return u.DeleteById(id)
 }
 
 func _updateFiled(info map[string]interface{}) ([]string, []interface{}) {

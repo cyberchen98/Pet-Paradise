@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	db "pet-paradise/model/common"
 )
 
@@ -42,20 +43,17 @@ func (o *orderTable) GetOneById(id int) (*OrderInfo, error) {
 	return info, nil
 }
 
-func (o *orderTable) InsertNewOrderInfo(orderInfo OrderInfo) error {
+func (o *orderTable) InsertNewOrderInfo(orderInfo OrderInfo) (sql.Result, error) {
 	m := make(map[string]interface{})
 	m["aid"] = orderInfo.AddressID
 	m["uid"] = orderInfo.UserID
 	m["pid"] = orderInfo.ProductID
 	m["status"] = orderInfo.Status
 	m["details"] = orderInfo.Details
-	if _, err := o.Insert(m); err != nil {
-		return err
-	}
-	return nil
+	return o.Insert(m)
 }
 
-func (o *orderTable) UpdateOrderInfoById(orderInfo OrderInfo, id int) error {
+func (o *orderTable) UpdateOrderInfoById(orderInfo OrderInfo, id int) (sql.Result, error) {
 	var orderInfoMap = make(map[string]interface{})
 
 	if orderInfo.AddressID != 0 {
@@ -72,15 +70,9 @@ func (o *orderTable) UpdateOrderInfoById(orderInfo OrderInfo, id int) error {
 	}
 
 	keys, values := _updateFiled(orderInfoMap)
-	if _, err := o.UpdateById(keys, id, values...); err != nil {
-		return err
-	}
-	return nil
+	return o.UpdateById(keys, id, values...)
 }
 
-func (o *orderTable) DeleteOrderInfoById(id int) error {
-	if err := o.DeleteById(id); err != nil {
-		return err
-	}
-	return nil
+func (o *orderTable) DeleteOrderInfoById(id int) (sql.Result, error) {
+	return o.DeleteById(id)
 }

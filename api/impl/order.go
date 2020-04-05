@@ -36,7 +36,7 @@ func DeleteOrderById(ctx *gin.Context) {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
-	if err := model.OrderTable.DeleteOrderInfoById(orderID); err == sql.ErrNoRows {
+	if _, err := model.OrderTable.DeleteOrderInfoById(orderID); err == sql.ErrNoRows {
 		utils.Fail(ctx, "no this record", nil)
 		return
 	} else if err != nil {
@@ -70,7 +70,7 @@ func UpdateOrderInfoById(ctx *gin.Context) {
 
 	}
 
-	if err := model.OrderTable.UpdateOrderInfoById(orderInfo, orderID); err == sql.ErrNoRows {
+	if _, err := model.OrderTable.UpdateOrderInfoById(orderInfo, orderID); err == sql.ErrNoRows {
 		utils.Fail(ctx, "no this record", nil)
 		return
 	} else if err != nil {

@@ -38,12 +38,8 @@ func (d *Table) Insert(fields map[string]interface{}) (sql.Result, error) {
 	return ret, err
 }
 
-func (d *Table) DeleteById(id int) error {
-	_, err := d.UpdateById([]string{"is_deleted"}, id, "1")
-	if err != nil {
-		return err
-	}
-	return nil
+func (d *Table) DeleteById(id int) (sql.Result, error) {
+	return d.UpdateById([]string{"is_deleted"}, id, "1")
 }
 
 func wrapWhere(w string) string {

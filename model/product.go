@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"fmt"
 	db "pet-paradise/model/common"
 	"time"
@@ -55,7 +56,7 @@ func (p *productTable) getOne(key, value interface{}) (*ProductInfo, error) {
 	return info, nil
 }
 
-func (p *productTable) InsertNewProductInfo(productInfo ProductInfo) error {
+func (p *productTable) InsertNewProductInfo(productInfo ProductInfo) (sql.Result, error) {
 	m := make(map[string]interface{})
 	m["product_name"] = productInfo.ProductName
 	m["parent_product_name"] = productInfo.ParentProductName
@@ -63,27 +64,21 @@ func (p *productTable) InsertNewProductInfo(productInfo ProductInfo) error {
 	m["count"] = productInfo.Count
 	m["update_time"] = time.Now().Format(TIME_FORMAT)
 	m["details"] = productInfo.Details
-	if _, err := p.Insert(m); err != nil {
-		return err
-	}
-	return nil
+	return p.Insert(m)
 }
 
-func (p *productTable) AddProductCountById(id int, count int) error {
+func (p *productTable) AddProductCountById(id int, count int) (sql.Result, error) {
 	if info, err := p.GetOneById(id); err != nil {
-		return err
+		return nil, err
 	} else {
 		count += info.Count
 	}
-	if err := p.UpdateProductInfoById(ProductInfo{
+	return p.UpdateProductInfoById(ProductInfo{
 		Count: count,
-	}, id); err != nil {
-		return err
-	}
-	return nil
+	}, id)
 }
 
-func (p *productTable) UpdateProductInfoById(productInfo ProductInfo, id int) error {
+func (p *productTable) UpdateProductInfoById(productInfo ProductInfo, id int) (sql.Result, error) {
 	var productInfoMap = make(map[string]interface{})
 
 	if productInfo.ProductName != "" {
@@ -118,15 +113,9 @@ func (p *productTable) UpdateProductInfoById(productInfo ProductInfo, id int) er
 	}
 
 	keys, values := _updateFiled(productInfoMap)
-	if _, err := p.UpdateById(keys, id, values...); err != nil {
-		return err
-	}
-	return nil
+	return p.UpdateById(keys, id, values...)
 }
 
-func (p *productTable) DeleteProductInfoById(id int) error {
-	if err := p.DeleteById(id); err != nil {
-		return err
-	}
-	return nil
+func (p *productTable) DeleteProductInfoById(id int) (sql.Result, error) {
+	return p.DeleteById(id)
 }
