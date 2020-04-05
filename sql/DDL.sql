@@ -1,3 +1,7 @@
+CREATE DATABASE IF NOT EXISTS `pet-paradise` CHARACTER SET utf8 COLLATE utf8_general_ci;
+USE pet-paradise;
+
+
 CREATE TABLE IF NOT EXISTS  `order` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `uid` int(11) unsigned NOT NULL COMMENT '用户id',
@@ -60,4 +64,8 @@ CREATE TABLE IF NOT EXISTS  `user_address` (
 ALTER TABLE `order` ADD INDEX uid_index(uid);
 ALTER TABLE `order` ADD INDEX uid_index(pid);
 ALTER TABLE `product` ADD INDEX uid_index(uid);
+ALTER TABLE `product` ADD INDEX product_index(parent_prodcut_name, product_name);
+ALTER TABLE `user` ADD INDEX user_name_index(user_name);
+ALTER TABLE `user` ADD INDEX user_phone_index(user_phone);
+ALTER TABLE `user` ADD INDEX user_email_index(user_email);
 ALTER TABLE `user_address` ADD INDEX uid_index(uid);
