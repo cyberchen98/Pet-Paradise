@@ -24,7 +24,7 @@ type UserAddressInfo struct {
 	PostCode    string `db:"post_code" json:"post_code" form:"post_code"`
 }
 
-func (a *addressTable) GetAllByUserId(uid int) ([]UserAddressInfo, error) {
+func (a *addressTable) SelectAddressInfoByUserId(uid int) ([]UserAddressInfo, error) {
 	query := "SELECT id, uid, province, city, details, phone_number, receiver, post_code FROM `" + a.TableName + "` WHERE uid=? AND is_deleted='0'"
 	var infoSlice []UserAddressInfo
 	if err := a.Select(&infoSlice, query, uid); err != nil {

@@ -69,7 +69,10 @@ func DeleteProduct(ctx *gin.Context) {
 		return
 	}
 
-	if err := model.ProductTable.DeleteProductInfoById(productID); err != nil {
+	if err := model.ProductTable.DeleteProductInfoById(productID); err == sql.ErrNoRows {
+		utils.Fail(ctx, "no this record", nil)
+		return
+	} else if err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
@@ -92,7 +95,10 @@ func UpdateProductInfo(ctx *gin.Context) {
 		return
 	}
 
-	if err := model.ProductTable.UpdateProductInfoById(productInfo, productID); err != nil {
+	if err := model.ProductTable.UpdateProductInfoById(productInfo, productID); err == sql.ErrNoRows {
+		utils.Fail(ctx, "no this record", nil)
+		return
+	} else if err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
