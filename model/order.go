@@ -24,7 +24,7 @@ type OrderInfo struct {
 	UpdateTime string `db:"update_time" json:"update_time"`
 }
 
-func (o *orderTable) GetAllByUserId(uid int) ([]ProductInfo, error) {
+func (o *orderTable) SelectOrderInfoByUserId(uid int) ([]ProductInfo, error) {
 	query := "SELECT id, uid, pid, aid, status, address, details, create_time, update_time FROM `" + o.TableName + "` WHERE uid=? AND is_deleted=0"
 	var infoSlice []ProductInfo
 	if err := o.Select(&infoSlice, query, uid); err != nil {
@@ -55,8 +55,23 @@ func (o *orderTable) InsertNewOrderInfo(orderInfo OrderInfo) error {
 	return nil
 }
 
-func (o *orderTable) UpdateOrderInfoById(addressInfo map[string]interface{}, id int) error {
-	keys, values := _updateFiled(addressInfo)
+func (o *orderTable) UpdateOrderInfoById(orderInfo OrderInfo, id int) error {
+	var orderInfoMap = make(map[string]interface{})
+
+	if orderInfo.AddressID != 0 {
+		orderInfoMap["aid"] = orderInfo.AddressID
+	}
+	if orderInfo.ProductID != 0 {
+		orderInfoMap["pid"] = orderInfo.ProductID
+	}
+	if orderInfo.Details != "" {
+		orderInfoMap["details"] = orderInfo.Details
+	}
+	if orderInfo.Status != "" {
+		orderInfoMap["status"] = orderInfo.Status
+	}
+
+	keys, values := _updateFiled(orderInfoMap)
 	if _, err := o.UpdateById(keys, id, values...); err != nil {
 		return err
 	}

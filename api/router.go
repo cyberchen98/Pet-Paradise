@@ -18,8 +18,8 @@ func InitRouter() *gin.Engine {
 
 	authFunc := middleware.AuthMiddleware()
 	authRouter := baseRouter.Group("/")
-
 	authRouter.Use(authFunc)
+
 	authRouter.GET("/logout", impl.Logout)
 	authRouter.GET("/info", impl.GetUserInfo)
 	authRouter.POST("/info", impl.UpdateUserInfo)
@@ -37,13 +37,13 @@ func InitRouter() *gin.Engine {
 
 	adminAuthFunc := middleware.AdminAuthMiddleware()
 	adminRouter := authRouter.Group("/admin")
-
 	adminRouter.Use(adminAuthFunc)
+
 	adminRouter.POST("/product", impl.AddNewProduct)
 	adminRouter.DELETE("/product", impl.DeleteProduct)
 	adminRouter.PUT("/product", impl.UpdateProductInfo)
 	adminRouter.PATCH("/order", impl.UpdateOrderInfoById)
-	adminRouter.GET("/order/:productId", impl.GetOrdersByProductId)
+	adminRouter.GET("/order", impl.GetOrdersByProductId)
 
 	return r
 }

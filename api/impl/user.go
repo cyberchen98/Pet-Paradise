@@ -12,11 +12,6 @@ import (
 	"strconv"
 )
 
-type UserInfo struct {
-	UserName string
-	Password string
-}
-
 func Login(ctx *gin.Context) {
 	log.Logger().Info("[Login] ", ctx.Request.URL)
 
@@ -37,7 +32,7 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
-	token, err := middleware.ReleaseToken(userInfo.ID, ctx.ClientIP())
+	token, err := middleware.ReleaseToken(userInfo.ID, userInfo.Role, ctx.ClientIP())
 	if err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
@@ -111,7 +106,10 @@ func UpdateUserInfo(ctx *gin.Context) {
 		userNewInfo.Password = ""
 	}
 
-	if err := model.UserTable.UpdateUserInfoById(userNewInfo, userID); err != nil {
+	if err := model.UserTable.UpdateUserInfoById(userNewInfo, userID); err == sql.ErrNoRows {
+		utils.Fail(ctx, "no this record", nil)
+		return
+	} else if err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
@@ -148,7 +146,10 @@ func UpdateUserPassword(ctx *gin.Context) {
 
 	if err := model.UserTable.UpdateUserInfoById(model.UserInfo{
 		Password: string(hashedPassword),
-	}, userID); err != nil {
+	}, userID); err == sql.ErrNoRows {
+		utils.Fail(ctx, "no this record", nil)
+		return
+	} else if err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
@@ -162,7 +163,10 @@ func DeleteUser(ctx *gin.Context) {
 
 	userID := ctx.GetInt("user_id")
 
-	if err := model.UserTable.DeleteUserInfoById(userID); err != nil {
+	if err := model.UserTable.DeleteUserInfoById(userID); err == sql.ErrNoRows {
+		utils.Fail(ctx, "no this record", nil)
+		return
+	} else if err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
@@ -201,7 +205,10 @@ func UpdateAddressInfo(ctx *gin.Context) {
 		return
 	}
 
-	if err := model.AddressTable.UpdateAddressInfoById(newAddressInfo, addressID); err != nil {
+	if err := model.AddressTable.UpdateAddressInfoById(newAddressInfo, addressID); err == sql.ErrNoRows {
+		utils.Fail(ctx, "no this record", nil)
+		return
+	} else if err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
@@ -212,7 +219,7 @@ func GetAllAddress(ctx *gin.Context) {
 
 	userID := ctx.GetInt("user_id")
 
-	addressSlice, err := model.AddressTable.GetAllByUserId(userID)
+	addressSlice, err := model.AddressTable.SelectAddressInfoByUserId(userID)
 	if err == sql.ErrNoRows {
 		utils.Success(ctx, "ok", nil)
 		return
@@ -229,7 +236,10 @@ func DeleteAddress(ctx *gin.Context) {
 
 	userID := ctx.GetInt("user_id")
 
-	if err := model.AddressTable.DeleteAddressInfoById(userID); err != nil {
+	if err := model.AddressTable.DeleteAddressInfoById(userID); err == sql.ErrNoRows {
+		utils.Fail(ctx, "no this record", nil)
+		return
+	} else if err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}

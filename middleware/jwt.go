@@ -11,13 +11,15 @@ var jwtKey = []byte("pet-paradise-asqwzx")
 type Claims struct {
 	UserId   int
 	ClientIP string
+	Role     string
 	jwt.StandardClaims
 }
 
-func ReleaseToken(userID int, clientIP string) (string, error) {
+func ReleaseToken(userID int, role, clientIP string) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
 		UserId:   userID,
+		Role:     role,
 		ClientIP: clientIP,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
