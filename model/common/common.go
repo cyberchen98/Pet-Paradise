@@ -22,11 +22,13 @@ func (d *Table) Select(dest interface{}, query string, args ...interface{}) erro
 	return d.GetDB().Select(dest, query, args...)
 }
 
-func (d *Table) UpdateById(keys []string, id int, args ...interface{}) (sql.Result, error) {
+func (d *Table) UpdateById(keys []string, ids []string, args ...interface{}) (sql.Result, error) {
 	query := "UPDATE `" + d.TableName + "` SET "
 	query += makeUpdaters(keys)
-	query += " WHERE id=?"
-	args = append(args, time.Now().Format(TIME_FORMAT), id)
+	query += " WHERE 1 "
+	whereCause, values := whereCauseIn(ids, "id")
+	query += whereCause
+	args = append(append(args, time.Now().Format(TIME_FORMAT)), values...)
 	return d.GetDB().Exec(query, args...)
 }
 
@@ -38,8 +40,8 @@ func (d *Table) Insert(fields map[string]interface{}) (sql.Result, error) {
 	return ret, err
 }
 
-func (d *Table) DeleteById(id int) (sql.Result, error) {
-	return d.UpdateById([]string{"is_deleted"}, id, "1")
+func (d *Table) DeleteById(ids []string) (sql.Result, error) {
+	return d.UpdateById([]string{"is_deleted"}, ids, "1")
 }
 
 func wrapWhere(w string) string {
@@ -72,17 +74,6 @@ func makeValues(query string, fields map[string]interface{}) ([]interface{}, str
 	}
 	query += ") VALUES (" + quotes + ") "
 	return values, query
-}
-
-func makeSelectors(keys []string) string {
-	str := ""
-	for i, v := range keys {
-		if i > 0 {
-			str += ","
-		}
-		str += v
-	}
-	return str
 }
 
 func makeUpdaters(keys []string) string {

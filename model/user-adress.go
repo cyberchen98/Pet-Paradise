@@ -25,7 +25,7 @@ type UserAddressInfo struct {
 	PostCode    string `db:"post_code" json:"post_code" form:"post_code"`
 }
 
-func (a *addressTable) SelectAddressInfoByUserId(uid int) ([]UserAddressInfo, error) {
+func (a *addressTable) SelectAddressInfoByUserId(uid string) ([]UserAddressInfo, error) {
 	query := "SELECT id, uid, province, city, details, phone_number, receiver, post_code FROM `" + a.TableName + "` WHERE uid=? AND is_deleted='0'"
 	var infoSlice []UserAddressInfo
 	if err := a.Select(&infoSlice, query, uid); err != nil {
@@ -34,7 +34,7 @@ func (a *addressTable) SelectAddressInfoByUserId(uid int) ([]UserAddressInfo, er
 	return infoSlice, nil
 }
 
-func (a *addressTable) GetOneById(id int) (*UserAddressInfo, error) {
+func (a *addressTable) GetOneById(id string) (*UserAddressInfo, error) {
 	query := "SELECT id, uid, province, city, details, phone_number, receiver, post_code FROM `" + a.TableName + "` WHERE is_deleted='0' AND id=?"
 	info := &UserAddressInfo{}
 	if err := a.Get(info, query, id); err != nil {
@@ -43,7 +43,7 @@ func (a *addressTable) GetOneById(id int) (*UserAddressInfo, error) {
 	return info, nil
 }
 
-func (a *addressTable) SelectByUserId(uid int) ([]UserAddressInfo, error) {
+func (a *addressTable) SelectByUserId(uid string) ([]UserAddressInfo, error) {
 	query := "SELECT id, uid, province, city, details, phone_number, receiver, post_code FROM `" + a.TableName + "` WHERE is_deleted='0' AND uid=?"
 	var info []UserAddressInfo
 	if err := a.Select(info, query, uid); err != nil {
@@ -64,7 +64,7 @@ func (a *addressTable) InsertNewAddressInfo(addressInfo UserAddressInfo) (sql.Re
 	return a.Insert(m)
 }
 
-func (a *addressTable) UpdateAddressInfoById(addressInfo UserAddressInfo, id int) (sql.Result, error) {
+func (a *addressTable) UpdateAddressInfoById(addressInfo UserAddressInfo, id string) (sql.Result, error) {
 	var addressInfoMap = make(map[string]interface{})
 
 	if addressInfo.Province != "" {
@@ -87,9 +87,9 @@ func (a *addressTable) UpdateAddressInfoById(addressInfo UserAddressInfo, id int
 	}
 
 	keys, values := _updateFiled(addressInfoMap)
-	return a.UpdateById(keys, id, values...)
+	return a.UpdateById(keys, []string{id}, values...)
 }
 
-func (a *addressTable) DeleteAddressInfoById(id int) (sql.Result, error) {
+func (a *addressTable) DeleteAddressInfoById(id []string) (sql.Result, error) {
 	return a.DeleteById(id)
 }

@@ -2,6 +2,7 @@ package impl
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
@@ -9,18 +10,21 @@ import (
 	"pet-paradise/middleware"
 	"pet-paradise/model"
 	"pet-paradise/utils"
+	"regexp"
 	"strconv"
 )
 
+const PASSWORD_REG = `^[a-zA-Z]\w{7,15}$`
+
 func Login(ctx *gin.Context) {
-	log.Logger().Info("[Login] ", ctx.Request.URL)
+	log.Logger().Info("[Login] %s", ctx.ClientIP())
 
 	userName := ctx.PostForm("username")
 	password := ctx.PostForm("password")
 	userInfo, err := model.UserTable.GetOneByName(userName)
 
 	if err == sql.ErrNoRows {
-		utils.Response(ctx, http.StatusUnauthorized, "不存在用户："+userName, nil)
+		utils.Response(ctx, http.StatusUnauthorized, "there's no such user："+userName, nil)
 		return
 	} else if err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
@@ -28,7 +32,7 @@ func Login(ctx *gin.Context) {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(userInfo.Password), []byte(password)); err != nil {
-		utils.Fail(ctx, "密码错误", nil)
+		utils.Fail(ctx, "wrong password", nil)
 		return
 	}
 
@@ -38,25 +42,29 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
-	utils.Success(ctx, "登陆成功", gin.H{"token": token})
+	utils.Success(ctx, "succeed", gin.H{"token": token})
 }
 
 func Logout(ctx *gin.Context) {
-	log.Logger().Info("[Logout] ", ctx.Request.URL)
+	log.Logger().Info("[Logout] %s", ctx.ClientIP())
 	utils.Success(ctx, "ok", nil)
 }
 
 func Register(ctx *gin.Context) {
-	log.Logger().Info("[Register] ", ctx.Request.URL)
+	log.Logger().Info("[Register] %s", ctx.ClientIP())
 	userName := ctx.PostForm("username")
 	password := ctx.PostForm("password")
+	if ok, _ := regexp.MatchString(PASSWORD_REG, password); !ok {
+		utils.Fail(ctx, "password must begin with letters, between 8-16 in length, can only contain letters, numbers and underscores", nil)
+		return
+	}
 
 	if info, err := model.UserTable.GetOneByName(userName); err == sql.ErrNoRows {
 	} else if err != nil {
 		utils.Fail(ctx, err.Error(), nil)
 		return
 	} else if info.Name == userName {
-		utils.Fail(ctx, "用户已存在："+userName, nil)
+		utils.Fail(ctx, "user has been registered："+userName, nil)
 		return
 	}
 
@@ -67,6 +75,7 @@ func Register(ctx *gin.Context) {
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
+		fmt.Println("err:", err)
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
@@ -81,21 +90,26 @@ func Register(ctx *gin.Context) {
 }
 
 func GetUserInfo(ctx *gin.Context) {
-	log.Logger().Info("[GetUserInfo] ", ctx.Request.URL)
+	log.Logger().Info("[GetUserInfo] %s", ctx.ClientIP())
 
-	userID := ctx.GetInt("user_id")
+	userID := ctx.GetString("uid")
+
+	fmt.Println("userId:", userID)
 	userInfo, err := model.UserTable.GetOneById(userID)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		utils.Fail(ctx, "no this record", nil)
 		return
+	} else if err != nil {
+		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 	}
 
 	utils.Success(ctx, "ok", userInfo)
 }
 
 func UpdateUserInfo(ctx *gin.Context) {
-	log.Logger().Info("[UpdateUserInfo] ", ctx.Request.URL)
+	log.Logger().Info("[UpdateUserInfo] %s", ctx.ClientIP())
 
-	userID := ctx.GetInt("user_id")
+	userID := ctx.GetString("uid")
 	var userNewInfo = model.UserInfo{}
 	if err := ctx.Bind(&userNewInfo); err != nil {
 		utils.Fail(ctx, "invalid param", nil)
@@ -104,6 +118,9 @@ func UpdateUserInfo(ctx *gin.Context) {
 
 	if userNewInfo.Password != "" {
 		userNewInfo.Password = ""
+	}
+	if userNewInfo.Role != "" {
+		userNewInfo.Role = ""
 	}
 
 	if _, err := model.UserTable.UpdateUserInfoById(userNewInfo, userID); err == sql.ErrNoRows {
@@ -117,18 +134,27 @@ func UpdateUserInfo(ctx *gin.Context) {
 }
 
 func UpdateUserPassword(ctx *gin.Context) {
-	log.Logger().Info("[UpdateUserPassword] ", ctx.Request.URL)
+	log.Logger().Info("[UpdateUserPassword] %s", ctx.ClientIP())
 
-	userID := ctx.GetInt("user_id")
+	userID := ctx.GetString("uid")
 	oldPassword := ctx.PostForm("old_password")
 	newPassword := ctx.PostForm("new_password")
+
+	if ok, _ := regexp.MatchString(PASSWORD_REG, newPassword); !ok {
+		utils.Fail(ctx, "password must begin with letters, between 8-16 in length, can only contain letters, numbers and underscores", nil)
+		return
+	}
+
 	if oldPassword == newPassword {
 		utils.Fail(ctx, "this password has been used recently", nil)
 		return
 	}
 
 	userInfo, err := model.UserTable.GetOneById(userID)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		utils.Fail(ctx, "no this record", nil)
+		return
+	} else if err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
@@ -159,9 +185,9 @@ func UpdateUserPassword(ctx *gin.Context) {
 }
 
 func DeleteUser(ctx *gin.Context) {
-	log.Logger().Info("[DeleteUser] ", ctx.Request.URL)
+	log.Logger().Info("[DeleteUser] %s", ctx.ClientIP())
 
-	userID := ctx.GetInt("user_id")
+	userID := ctx.PostFormArray("uid")
 
 	if _, err := model.UserTable.DeleteUserInfoById(userID); err == sql.ErrNoRows {
 		utils.Fail(ctx, "no this record", nil)
@@ -174,30 +200,28 @@ func DeleteUser(ctx *gin.Context) {
 }
 
 func AddAddressInfo(ctx *gin.Context) {
-	log.Logger().Info("[AddAddressInfo] ", ctx.Request.URL)
+	log.Logger().Info("[AddAddressInfo] %s", ctx.ClientIP())
 
-	userID := ctx.GetInt("user_id")
+	userID := ctx.GetString("uid")
 
 	var newAddressInfo model.UserAddressInfo
 	if err := ctx.Bind(&newAddressInfo); err != nil {
 		utils.Fail(ctx, "invalid params", nil)
 		return
 	}
-	newAddressInfo.UserID = userID
+	newAddressInfo.UserID, _ = strconv.Atoi(userID)
 	if _, err := model.AddressTable.InsertNewAddressInfo(newAddressInfo); err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
+
+	utils.Success(ctx, "ok", nil)
 }
 
 func UpdateAddressInfo(ctx *gin.Context) {
-	log.Logger().Info("[UpdateAddressInfo] ", ctx.Request.URL)
+	log.Logger().Info("[UpdateAddressInfo] %s", ctx.ClientIP())
 
-	addressID, err := strconv.Atoi(ctx.PostForm("address_id"))
-	if err != nil {
-		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
-		return
-	}
+	addressID := ctx.PostForm("aid")
 
 	var newAddressInfo model.UserAddressInfo
 	if err := ctx.Bind(&newAddressInfo); err != nil {
@@ -212,19 +236,21 @@ func UpdateAddressInfo(ctx *gin.Context) {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
+
+	utils.Success(ctx, "ok", nil)
 }
 
 func GetAllAddress(ctx *gin.Context) {
-	log.Logger().Info("[GetAllAddress] ", ctx.Request.URL)
+	log.Logger().Info("[GetAllAddress] %s", ctx.ClientIP())
 
-	userID := ctx.GetInt("user_id")
+	userID := ctx.GetString("uid")
 
 	addressSlice, err := model.AddressTable.SelectAddressInfoByUserId(userID)
 	if err == sql.ErrNoRows {
 		utils.Success(ctx, "ok", nil)
 		return
 	} else if err != nil {
-		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
+		utils.Response(ctx, http.StatusInternalServerError, "internal error", err)
 		return
 	}
 
@@ -232,14 +258,15 @@ func GetAllAddress(ctx *gin.Context) {
 }
 
 func DeleteAddress(ctx *gin.Context) {
-	log.Logger().Info("[DeleteAddress] ", ctx.Request.URL)
+	log.Logger().Info("[DeleteAddress] %s", ctx.ClientIP())
 
-	userID := ctx.GetInt("user_id")
+	addressIDs := ctx.PostFormArray("aid")
 
-	if _, err := model.AddressTable.DeleteAddressInfoById(userID); err == sql.ErrNoRows {
+	if _, err := model.AddressTable.DeleteAddressInfoById(addressIDs); err == sql.ErrNoRows {
 		utils.Fail(ctx, "no this record", nil)
 		return
 	} else if err != nil {
+		fmt.Println(err)
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}

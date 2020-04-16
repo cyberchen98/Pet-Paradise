@@ -17,33 +17,34 @@ func InitRouter() *gin.Engine {
 	baseRouter.GET("/product", impl.GetProductInfoByName)
 
 	authFunc := middleware.AuthMiddleware()
-	authRouter := baseRouter.Group("/")
+	authRouter := baseRouter.Group("/user")
 	authRouter.Use(authFunc)
 
 	authRouter.GET("/logout", impl.Logout)
 	authRouter.GET("/info", impl.GetUserInfo)
-	authRouter.POST("/info", impl.UpdateUserInfo)
+	authRouter.PATCH("/info", impl.UpdateUserInfo)
 	authRouter.DELETE("/info", impl.DeleteUser)
-	authRouter.PATCH("/info", impl.UpdateUserPassword)
+	authRouter.PATCH("/info/password", impl.UpdateUserPassword)
 
 	authRouter.GET("/address", impl.GetAllAddress)
-	authRouter.POST("/address", impl.AddAddressInfo)
+	authRouter.PUT("/address", impl.AddAddressInfo)
 	authRouter.PATCH("/address", impl.UpdateAddressInfo)
 	authRouter.DELETE("/address", impl.DeleteAddress)
 
-	authRouter.GET("/order", impl.GetOrderInfoByUserId)
+	authRouter.GET("/order/all", impl.GetAllOrderInfoByUserId)
+	authRouter.GET("/order", impl.GetOrderInfoById)
 	authRouter.POST("/order", impl.GenerateOrder)
 	authRouter.DELETE("/order", impl.DeleteOrderById)
+	authRouter.PATCH("/order", impl.UpdateOrderInfoById)
 
 	adminAuthFunc := middleware.AdminAuthMiddleware()
-	adminRouter := authRouter.Group("/admin")
-	adminRouter.Use(adminAuthFunc)
+	adminRouter := baseRouter.Group("/admin")
+	adminRouter.Use(authFunc, adminAuthFunc)
 
 	adminRouter.POST("/product", impl.AddNewProduct)
 	adminRouter.DELETE("/product", impl.DeleteProduct)
-	adminRouter.PUT("/product", impl.UpdateProductInfo)
-	adminRouter.PATCH("/order", impl.UpdateOrderInfoById)
-	adminRouter.GET("/order", impl.GetOrdersByProductId)
+	adminRouter.PATCH("/product", impl.UpdateProductInfo)
+	adminRouter.PATCH("/order", impl.AdminUpdateOrderInfoById)
 
 	return r
 }

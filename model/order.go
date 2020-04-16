@@ -19,24 +19,30 @@ type OrderInfo struct {
 	UserID     int    `db:"uid" json:"uid"`
 	ProductID  int    `db:"pid" json:"pid"`
 	AddressID  int    `db:"aid" json:"aid"`
-	Status     string `db:"status" json:"status"`
-	Details    string `db:"details" json:"details"`
+	Status     string `db:"status" json:"status" form:"status"`
+	Details    string `db:"details" json:"details" form:"details"`
 	CreateTime string `db:"create_time" json:"create_time"`
 	UpdateTime string `db:"update_time" json:"update_time"`
 }
 
-func (o *orderTable) SelectOrderInfoByUserId(uid int) ([]ProductInfo, error) {
-	query := "SELECT id, uid, pid, aid, status, address, details, create_time, update_time FROM `" + o.TableName + "` WHERE uid=? AND is_deleted=0"
-	var infoSlice []ProductInfo
+type OrderInfoDetail struct {
+	OrderInfo
+	Address UserAddressInfo `json:"address"`
+	Product ProductInfo     `json:"product"`
+}
+
+func (o *orderTable) SelectOrderInfoByUserId(uid string) ([]OrderInfo, error) {
+	query := "SELECT id, uid, pid, aid, status, details, create_time, update_time FROM `" + o.TableName + "` WHERE uid=? AND is_deleted=0"
+	var infoSlice []OrderInfo
 	if err := o.Select(&infoSlice, query, uid); err != nil {
 		return nil, err
 	}
 	return infoSlice, nil
 }
 
-func (o *orderTable) GetOneById(id int) (*OrderInfo, error) {
+func (o *orderTable) GetOneById(id string) (*OrderInfoDetail, error) {
 	query := "SELECT id, uid, pid, aid, status, details, create_time, update_time FROM `" + o.TableName + "` WHERE is_deleted='0' AND id=?"
-	info := &OrderInfo{}
+	info := &OrderInfoDetail{}
 	if err := o.Get(info, query, id); err != nil {
 		return nil, err
 	}
@@ -53,14 +59,11 @@ func (o *orderTable) InsertNewOrderInfo(orderInfo OrderInfo) (sql.Result, error)
 	return o.Insert(m)
 }
 
-func (o *orderTable) UpdateOrderInfoById(orderInfo OrderInfo, id int) (sql.Result, error) {
+func (o *orderTable) UpdateOrderInfoById(orderInfo OrderInfo, id string) (sql.Result, error) {
 	var orderInfoMap = make(map[string]interface{})
 
 	if orderInfo.AddressID != 0 {
 		orderInfoMap["aid"] = orderInfo.AddressID
-	}
-	if orderInfo.ProductID != 0 {
-		orderInfoMap["pid"] = orderInfo.ProductID
 	}
 	if orderInfo.Details != "" {
 		orderInfoMap["details"] = orderInfo.Details
@@ -70,9 +73,9 @@ func (o *orderTable) UpdateOrderInfoById(orderInfo OrderInfo, id int) (sql.Resul
 	}
 
 	keys, values := _updateFiled(orderInfoMap)
-	return o.UpdateById(keys, id, values...)
+	return o.UpdateById(keys, []string{id}, values...)
 }
 
-func (o *orderTable) DeleteOrderInfoById(id int) (sql.Result, error) {
+func (o *orderTable) DeleteOrderInfoById(id []string) (sql.Result, error) {
 	return o.DeleteById(id)
 }

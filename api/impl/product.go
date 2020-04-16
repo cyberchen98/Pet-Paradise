@@ -7,11 +7,10 @@ import (
 	"pet-paradise/log"
 	"pet-paradise/model"
 	"pet-paradise/utils"
-	"strconv"
 )
 
 func GetProductInfoByParentName(ctx *gin.Context) {
-	log.Logger().Info("[GetProductInfoByParentName] ", ctx.Request.URL)
+	log.Logger().Info("[GetProductInfoByParentName] %s", ctx.ClientIP())
 
 	parentProductName := ctx.Query("parent_product_name")
 
@@ -28,7 +27,7 @@ func GetProductInfoByParentName(ctx *gin.Context) {
 }
 
 func GetProductInfoByName(ctx *gin.Context) {
-	log.Logger().Info("[GetProductInfoByName] ", ctx.Request.URL)
+	log.Logger().Info("[GetProductInfoByName] %s", ctx.ClientIP())
 
 	productName := ctx.Query("product_name")
 	productInfo, err := model.ProductTable.GetOneByName(productName)
@@ -44,7 +43,7 @@ func GetProductInfoByName(ctx *gin.Context) {
 }
 
 func AddNewProduct(ctx *gin.Context) {
-	log.Logger().Info("[AddNewProduct] ", ctx.Request.URL)
+	log.Logger().Info("[AddNewProduct] %s", ctx.ClientIP())
 
 	var productInfo model.ProductInfo
 	if err := ctx.Bind(&productInfo); err != nil {
@@ -61,15 +60,11 @@ func AddNewProduct(ctx *gin.Context) {
 }
 
 func DeleteProduct(ctx *gin.Context) {
-	log.Logger().Info("[DeleteProduct] ", ctx.Request.URL)
+	log.Logger().Info("[DeleteProduct] %s", ctx.ClientIP())
 
-	productID, err := strconv.Atoi(ctx.Query("pid"))
-	if err != nil {
-		utils.Fail(ctx, "invalid param: product_id", nil)
-		return
-	}
+	productIDs := ctx.PostFormArray("pid")
 
-	if _, err := model.ProductTable.DeleteProductInfoById(productID); err == sql.ErrNoRows {
+	if _, err := model.ProductTable.DeleteProductInfoById(productIDs); err == sql.ErrNoRows {
 		utils.Fail(ctx, "no this record", nil)
 		return
 	} else if err != nil {
@@ -81,13 +76,9 @@ func DeleteProduct(ctx *gin.Context) {
 }
 
 func UpdateProductInfo(ctx *gin.Context) {
-	log.Logger().Info("[UpdateProductInfo] ", ctx.Request.URL)
+	log.Logger().Info("[UpdateProductInfo] %s", ctx.ClientIP())
 
-	productID, err := strconv.Atoi(ctx.Query("pid"))
-	if err != nil {
-		utils.Fail(ctx, "invalid param: product_id", nil)
-		return
-	}
+	productID := ctx.PostForm("pid")
 
 	var productInfo model.ProductInfo
 	if err := ctx.Bind(&productInfo); err != nil {

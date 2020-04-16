@@ -3,6 +3,7 @@ package middleware
 import (
 	"github.com/gin-gonic/gin"
 	"pet-paradise/utils"
+	"strconv"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
@@ -10,18 +11,18 @@ func AuthMiddleware() gin.HandlerFunc {
 		tokenString := ctx.GetHeader("Authorization")
 
 		if tokenString == "" {
-			utils.Fail(ctx, "请先登陆", nil)
+			utils.Fail(ctx, "please login", nil)
 			ctx.Abort()
 			return
 		}
 		claims, err := ParseToken(tokenString)
 		if err != nil {
-			utils.Fail(ctx, "重新登陆", nil)
+			utils.Fail(ctx, "please login again", nil)
 			ctx.Abort()
 			return
 		}
 
-		ctx.Set("user_id", claims.UserId)
+		ctx.Set("uid", strconv.Itoa(claims.UserId))
 		ctx.Set("role", claims.Role)
 		ctx.Next()
 	}
@@ -29,8 +30,8 @@ func AuthMiddleware() gin.HandlerFunc {
 
 func AdminAuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		if role, ok :=ctx.Get("role"); !ok || role!="admin" {
-			utils.Fail(ctx, "权限不足", nil)
+		if role, ok := ctx.Get("role"); !ok || role != "admin" {
+			utils.Fail(ctx, "permission denied", nil)
 			ctx.Abort()
 			return
 		}

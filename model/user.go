@@ -45,7 +45,7 @@ func (u *userTable) GetOneByName(userName string) (*UserInfo, error) {
 	return u.getOne("user_name", userName)
 }
 
-func (u *userTable) GetOneById(id int) (*UserInfo, error) {
+func (u *userTable) GetOneById(id string) (*UserInfo, error) {
 	return u.getOne("id", id)
 }
 
@@ -68,7 +68,7 @@ func (u *userTable) InsertNewUserInfo(userInfo UserInfo) (sql.Result, error) {
 	return u.Insert(m)
 }
 
-func (u *userTable) UpdateUserInfoById(userInfo UserInfo, id int) (sql.Result, error) {
+func (u *userTable) UpdateUserInfoById(userInfo UserInfo, id string) (sql.Result, error) {
 	var userInfoMap = make(map[string]interface{})
 	if userInfo.Role != "" {
 		roleValid := false
@@ -96,10 +96,10 @@ func (u *userTable) UpdateUserInfoById(userInfo UserInfo, id int) (sql.Result, e
 	}
 
 	keys, values := _updateFiled(userInfoMap)
-	return u.UpdateById(keys, id, values...)
+	return u.UpdateById(keys, []string{id}, values...)
 }
 
-func (u *userTable) DeleteUserInfoById(id int) (sql.Result, error) {
+func (u *userTable) DeleteUserInfoById(id []string) (sql.Result, error) {
 	return u.DeleteById(id)
 }
 

@@ -43,7 +43,7 @@ func (p *productTable) GetOneByName(productName string) (*ProductInfo, error) {
 	return p.getOne("product_name", productName)
 }
 
-func (p *productTable) GetOneById(id int) (*ProductInfo, error) {
+func (p *productTable) GetOneById(id string) (*ProductInfo, error) {
 	return p.getOne("id", id)
 }
 
@@ -67,7 +67,7 @@ func (p *productTable) InsertNewProductInfo(productInfo ProductInfo) (sql.Result
 	return p.Insert(m)
 }
 
-func (p *productTable) AddProductCountById(id int, count int) (sql.Result, error) {
+func (p *productTable) AddProductCountById(id string, count int) (sql.Result, error) {
 	if info, err := p.GetOneById(id); err != nil {
 		return nil, err
 	} else {
@@ -78,7 +78,7 @@ func (p *productTable) AddProductCountById(id int, count int) (sql.Result, error
 	}, id)
 }
 
-func (p *productTable) UpdateProductInfoById(productInfo ProductInfo, id int) (sql.Result, error) {
+func (p *productTable) UpdateProductInfoById(productInfo ProductInfo, id string) (sql.Result, error) {
 	var productInfoMap = make(map[string]interface{})
 
 	if productInfo.ProductName != "" {
@@ -113,9 +113,9 @@ func (p *productTable) UpdateProductInfoById(productInfo ProductInfo, id int) (s
 	}
 
 	keys, values := _updateFiled(productInfoMap)
-	return p.UpdateById(keys, id, values...)
+	return p.UpdateById(keys, []string{id}, values...)
 }
 
-func (p *productTable) DeleteProductInfoById(id int) (sql.Result, error) {
+func (p *productTable) DeleteProductInfoById(id []string) (sql.Result, error) {
 	return p.DeleteById(id)
 }

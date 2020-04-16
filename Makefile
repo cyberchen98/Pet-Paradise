@@ -4,4 +4,8 @@ build:
 
 .PHONY: clean
 clean:
-	go clean -i
+	go clean -i && rm -rf build deployment/server
+
+.PHONY: product
+product:
+	GOOS=linux GOARCH=amd64 go build -o deployment/server cmd/server/*.go
