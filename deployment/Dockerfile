@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-COPY entrypoint.sh server config.yaml /server/
+COPY deployment/entrypoint.sh deployment/server deployment/config.yaml /server/
 
 WORKDIR /server
 
