@@ -31,7 +31,7 @@ func GetAllOrderInfoByUserId(ctx *gin.Context) {
 func GetOrderInfoById(ctx *gin.Context) {
 	log.Logger().Info("[GetOrderInfoById] %s", ctx.ClientIP())
 
-	orderID := ctx.Param("oid")
+	orderID := ctx.Query("oid")
 
 	orderInfo, err := model.OrderTable.GetOneById(orderID)
 	if err == sql.ErrNoRows {

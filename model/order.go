@@ -17,8 +17,8 @@ var OrderTable = &orderTable{db.Table{
 type OrderInfo struct {
 	ID         int    `db:"id" json:"id"`
 	UserID     int    `db:"uid" json:"uid"`
-	ProductID  int    `db:"pid" json:"pid"`
-	AddressID  int    `db:"aid" json:"aid"`
+	ProductID  int    `db:"pid" json:"pid" form:"pid"`
+	AddressID  int    `db:"aid" json:"aid" form:"aid"`
 	Status     string `db:"status" json:"status" form:"status"`
 	Details    string `db:"details" json:"details" form:"details"`
 	CreateTime string `db:"create_time" json:"create_time"`

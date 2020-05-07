@@ -12,7 +12,7 @@ import (
 func GetProductInfoByParentName(ctx *gin.Context) {
 	log.Logger().Info("[GetProductInfoByParentName] %s", ctx.ClientIP())
 
-	parentProductName := ctx.Query("parent_product_name")
+	parentProductName := ctx.Param("parent_product_name")
 
 	productInfo, err := model.ProductTable.SelectByParentProductName(parentProductName)
 	if err == sql.ErrNoRows {

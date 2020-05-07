@@ -10,6 +10,9 @@ func InitRouter() *gin.Engine {
 	r := gin.Default()
 
 	baseRouter := r.Group("/api/v1")
+	devBase := middleware.Cors()
+	baseRouter.Use(devBase)
+
 	baseRouter.POST("/login", impl.Login)
 	baseRouter.POST("/register", impl.Register)
 

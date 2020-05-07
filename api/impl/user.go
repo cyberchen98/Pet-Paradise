@@ -52,6 +52,7 @@ func Logout(ctx *gin.Context) {
 
 func Register(ctx *gin.Context) {
 	log.Logger().Info("[Register] %s", ctx.ClientIP())
+
 	userName := ctx.PostForm("username")
 	password := ctx.PostForm("password")
 	if ok, _ := regexp.MatchString(PASSWORD_REG, password); !ok {

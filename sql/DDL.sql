@@ -1,5 +1,5 @@
 CREATE DATABASE IF NOT EXISTS `pet-paradise` CHARACTER SET utf8 COLLATE utf8_general_ci;
-USE pet-paradise;
+USE `pet-paradise`;
 
 
 CREATE TABLE IF NOT EXISTS  `order` (

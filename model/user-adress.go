@@ -19,8 +19,8 @@ type UserAddressInfo struct {
 	UserID      int    `db:"uid" json:"uid"`
 	Province    string `db:"province" json:"province" form:"province"`
 	City        string `db:"city" json:"city" form:"city"`
-	Details     string `db:"details" json:"details"`
-	PhoneNumber string `db:"phone_number" json:"phone_number" form:"phone_number"`
+	Details     string `db:"details" json:"details" form:"details"`
+	PhoneNumber string `db:"phone_number" json:"phone_number" form:"phone"`
 	Receiver    string `db:"receiver" json:"receiver" form:"receiver"`
 	PostCode    string `db:"post_code" json:"post_code" form:"post_code"`
 }
