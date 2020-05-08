@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"pet-paradise/api/impl"
 	"pet-paradise/middleware"
+	"pet-paradise/utils"
 )
 
 func InitRouter() *gin.Engine {
@@ -12,6 +13,8 @@ func InitRouter() *gin.Engine {
 	baseRouter := r.Group("/api/v1")
 	devBase := middleware.Cors()
 	baseRouter.Use(devBase)
+
+	baseRouter.GET("/ping", LiveProbe)
 
 	baseRouter.POST("/login", impl.Login)
 	baseRouter.POST("/register", impl.Register)
@@ -50,4 +53,8 @@ func InitRouter() *gin.Engine {
 	adminRouter.PATCH("/order", impl.AdminUpdateOrderInfoById)
 
 	return r
+}
+
+func LiveProbe(ctx *gin.Context) {
+	utils.Success(ctx, "pong", nil)
 }

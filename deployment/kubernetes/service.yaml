@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+   name: pet-paradise-app
+   labels:
+     name: pet-paradise
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pet-paradise
+  namespace: pet-paradise-app
+  labels:
+    k8s-app: pet-paradise
+spec:
+  replicas: 4
+  revisionHistoryLimit: 10
+  minReadySeconds: 5
+  selector:
+    matchLabels:
+      k8s-app: pet-paradise
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: pet-paradise
+    spec:
+      containers:
+      - image: registry.cn-shenzhen.aliyuncs.com/golem/pet-paradise-server:dev
+        imagePullPolicy: Always
+        name: back-end-service
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 50m
+            memory: 50Mi
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 10
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /api/v1/ping
+            port: 8080
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pet-paradise-service
+  namespace: pet-paradise-app
+  labels:
+    k8s-app: pet-paradise
+spec:
+  type: NodePort
+  ports:
+    - name: api
+      port: 8080
+      targetPort: 8080
+      nodePort: 30080
+  selector:
+    k8s-app: pet-paradise
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: server-ingress
+  namespace: pet-paradise-app
+spec:
+  rules:
+  - host:
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: pet-paradise
+          servicePort: api
