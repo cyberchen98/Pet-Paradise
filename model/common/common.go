@@ -36,8 +36,7 @@ func (d *Table) Insert(fields map[string]interface{}) (sql.Result, error) {
 	query := "INSERT INTO `" + d.TableName + "`("
 	var values []interface{}
 	values, query = makeValues(query, fields)
-	ret, err := d.GetDB().Exec(query, values...)
-	return ret, err
+	return d.GetDB().Exec(query, values...)
 }
 
 func (d *Table) DeleteById(ids []string) (sql.Result, error) {

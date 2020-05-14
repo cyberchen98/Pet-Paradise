@@ -12,3 +12,8 @@ mysql:
   user: root
   password: password
   dbname: pet-paradise
+
+server:
+  api: :8080
+  agent:
+    - 127.0.0.1

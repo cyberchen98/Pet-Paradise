@@ -31,7 +31,7 @@ spec:
         k8s-app: pet-paradise
     spec:
       containers:
-      - image: registry.cn-shenzhen.aliyuncs.com/golem/pet-paradise-server:dev
+      - image: {{.image}}
         imagePullPolicy: Always
         name: back-end-service
         ports:

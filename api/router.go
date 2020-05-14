@@ -19,7 +19,8 @@ func InitRouter() *gin.Engine {
 	baseRouter.POST("/login", impl.Login)
 	baseRouter.POST("/register", impl.Register)
 
-	baseRouter.GET("/product/:parentProductName", impl.GetProductInfoByParentName)
+	baseRouter.GET("/product/parentProduct", impl.GetParentProduct)
+	baseRouter.GET("/product/all/:parentProductName", impl.GetProductInfoByParentName)
 	baseRouter.GET("/product", impl.GetProductInfoByName)
 
 	authFunc := middleware.AuthMiddleware()
@@ -38,7 +39,6 @@ func InitRouter() *gin.Engine {
 	authRouter.DELETE("/address", impl.DeleteAddress)
 
 	authRouter.GET("/order/all", impl.GetAllOrderInfoByUserId)
-	authRouter.GET("/order", impl.GetOrderInfoById)
 	authRouter.POST("/order", impl.GenerateOrder)
 	authRouter.DELETE("/order", impl.DeleteOrderById)
 	authRouter.PATCH("/order", impl.UpdateOrderInfoById)
@@ -47,10 +47,15 @@ func InitRouter() *gin.Engine {
 	adminRouter := baseRouter.Group("/admin")
 	adminRouter.Use(authFunc, adminAuthFunc)
 
-	adminRouter.POST("/product", impl.AddNewProduct)
-	adminRouter.DELETE("/product", impl.DeleteProduct)
+	adminRouter.PUT("/product/parentProduct", impl.AddNewParentProduct)
+	adminRouter.DELETE("/product/parentProduct", impl.AdminDeleteParentProduct)
+	adminRouter.PUT("/product", impl.AddNewProduct)
 	adminRouter.PATCH("/product", impl.UpdateProductInfo)
+	adminRouter.DELETE("/product", impl.DeleteProduct)
+	adminRouter.GET("/order", impl.AdminGetOrdersByProductId)
 	adminRouter.PATCH("/order", impl.AdminUpdateOrderInfoById)
+	adminRouter.GET("/user", impl.AdminGetUserInfoByName)
+	adminRouter.PATCH("/user", impl.AdminUpdateUserRole)
 
 	return r
 }

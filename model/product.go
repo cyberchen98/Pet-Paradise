@@ -21,8 +21,8 @@ type ProductInfo struct {
 	ProductName       string `db:"product_name" json:"product_name" form:"product_name"`
 	ParentProductName string `db:"parent_product_name" json:"parent_product_name" form:"parent_product_name"`
 	Price             string `db:"price" json:"price" form:"price"`
-	Describe          string `db:"describe" json:"describe" form:"describe"`
-	Count             int    `db:"count_remains" json:"count" form:"count"`
+	Describe          string `db:"description" json:"description" form:"description"`
+	Count             int    `db:"count_remain" json:"count" form:"count"`
 	IsOnSale          string `db:"is_on_sale" json:"is_on_sale" form:"is_on_sale"`
 	IsOnDiscount      string `db:"is_on_discount" json:"is_on_discount" form:"is_on_discount"`
 	Details           string `db:"details" json:"details" form:"details"`
@@ -31,7 +31,7 @@ type ProductInfo struct {
 }
 
 func (p *productTable) SelectByParentProductName(parentProductName string) ([]ProductInfo, error) {
-	query := "SELECT id, product_name, parent_product_name, price, describe, count_remains, create_time, update_time FROM `" + p.TableName + "` WHERE is_deleted='0' AND parent_product_name=?"
+	query := "SELECT id, product_name, parent_product_name, price, description, count_remain, is_on_sale, is_on_discount, create_time, update_time FROM `" + p.TableName + "` WHERE is_deleted='0' AND is_on_sale IN(0,1) AND parent_product_name=?"
 	var info []ProductInfo
 	if err := p.Select(&info, query, parentProductName); err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (p *productTable) GetOneById(id string) (*ProductInfo, error) {
 }
 
 func (p *productTable) getOne(key, value interface{}) (*ProductInfo, error) {
-	query := "SELECT id, product_name, parent_product_name, price, describe, count_remains, create_time, update_time FROM `" + p.TableName + "` WHERE is_deleted='0' AND %s=?"
+	query := "SELECT id, product_name, parent_product_name, price, description, count_remains, create_time, update_time FROM `" + p.TableName + "` WHERE is_deleted='0' AND %s=?"
 	info := &ProductInfo{}
 	if err := p.Get(info, fmt.Sprintf(query, key), value); err != nil {
 		return nil, err
@@ -61,7 +61,8 @@ func (p *productTable) InsertNewProductInfo(productInfo ProductInfo) (sql.Result
 	m["product_name"] = productInfo.ProductName
 	m["parent_product_name"] = productInfo.ParentProductName
 	m["price"] = productInfo.Price
-	m["count"] = productInfo.Count
+	m["description"] = productInfo.Describe
+	m["count_remain"] = productInfo.Count
 	m["update_time"] = time.Now().Format(TIME_FORMAT)
 	m["details"] = productInfo.Details
 	return p.Insert(m)
@@ -88,7 +89,7 @@ func (p *productTable) UpdateProductInfoById(productInfo ProductInfo, id string)
 		productInfoMap["parent_product_name"] = productInfo.ParentProductName
 	}
 	if productInfo.Describe != "" {
-		productInfoMap["describe"] = productInfo.Describe
+		productInfoMap["description"] = productInfo.Describe
 	}
 	if productInfo.Price != "" {
 		productInfoMap["price"] = productInfo.Price
@@ -97,7 +98,7 @@ func (p *productTable) UpdateProductInfoById(productInfo ProductInfo, id string)
 		productInfoMap["details"] = productInfo.Details
 	}
 	if productInfo.Count != 0 {
-		productInfoMap["count_remains"] = productInfo.Count
+		productInfoMap["count_remain"] = productInfo.Count
 	}
 	if productInfo.IsOnDiscount != "" {
 		if productInfo.IsOnDiscount != "0" && productInfo.IsOnDiscount != "1" {
@@ -114,6 +115,20 @@ func (p *productTable) UpdateProductInfoById(productInfo ProductInfo, id string)
 
 	keys, values := _updateFiled(productInfoMap)
 	return p.UpdateById(keys, []string{id}, values...)
+}
+
+func (p *productTable) GetParentProduct() ([]string, error) {
+	query := "SELECT DISTINCT(parent_product_name) FROM product WHERE is_deleted='0'"
+	var parentProducts []string
+	if err := p.Select(&parentProducts, query); err != nil {
+		return nil, err
+	}
+	return parentProducts, nil
+}
+
+func (p *productTable) DeleteParentProduct(parentProductName string) (sql.Result, error) {
+	query := "UPDATE product SET is_deleted='1' WHERE parent_product_name=?"
+	return p.GetDB().Exec(query, parentProductName)
 }
 
 func (p *productTable) DeleteProductInfoById(id []string) (sql.Result, error) {

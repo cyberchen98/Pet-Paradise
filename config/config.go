@@ -24,10 +24,18 @@ type LogConfig struct {
 	LogLevel string `config:"log-level"`
 }
 
-type Config struct {
-	Mysql DatabaseConfig `config:"mysql"`
-	Log   LogConfig      `config:"log"`
+type ServerConfig struct {
+	Agent []string `config:"agent"`
+	API   string   `config:"api"`
 }
+
+type Config struct {
+	Mysql  DatabaseConfig `config:"mysql"`
+	Log    LogConfig      `config:"log"`
+	Server ServerConfig   `config:"server"`
+}
+
+var Server *ServerConfig
 
 func ParseConfig(filename string) error {
 	configContent, err := yaml.NewConfigWithFile(filename)
@@ -53,6 +61,8 @@ func ParseConfig(filename string) error {
 	} else {
 		fmt.Printf("Saving logs at %s\n", logConf.Dir)
 	}
+
+	Server = &config.Server
 
 	return nil
 }

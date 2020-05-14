@@ -32,21 +32,21 @@ type OrderInfoDetail struct {
 }
 
 func (o *orderTable) SelectOrderInfoByUserId(uid string) ([]OrderInfo, error) {
-	query := "SELECT id, uid, pid, aid, status, details, create_time, update_time FROM `" + o.TableName + "` WHERE uid=? AND is_deleted=0"
+	return o.selectOrderInfo(uid, "uid")
+
+}
+
+func (o *orderTable) SelectOrderInfoByProductId(pid string) ([]OrderInfo, error) {
+	return o.selectOrderInfo(pid, "pid")
+}
+
+func (o *orderTable) selectOrderInfo(id, info string) ([]OrderInfo, error) {
+	query := "SELECT id, uid, pid, aid, status, details, create_time, update_time FROM `" + o.TableName + "` WHERE " + info + "=? AND is_deleted='0'"
 	var infoSlice []OrderInfo
-	if err := o.Select(&infoSlice, query, uid); err != nil {
+	if err := o.Select(&infoSlice, query, id); err != nil {
 		return nil, err
 	}
 	return infoSlice, nil
-}
-
-func (o *orderTable) GetOneById(id string) (*OrderInfoDetail, error) {
-	query := "SELECT id, uid, pid, aid, status, details, create_time, update_time FROM `" + o.TableName + "` WHERE is_deleted='0' AND id=?"
-	info := &OrderInfoDetail{}
-	if err := o.Get(info, query, id); err != nil {
-		return nil, err
-	}
-	return info, nil
 }
 
 func (o *orderTable) InsertNewOrderInfo(orderInfo OrderInfo) (sql.Result, error) {

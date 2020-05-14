@@ -2,7 +2,6 @@ package impl
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
@@ -76,7 +75,6 @@ func Register(ctx *gin.Context) {
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		fmt.Println("err:", err)
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
@@ -95,7 +93,6 @@ func GetUserInfo(ctx *gin.Context) {
 
 	userID := ctx.GetString("uid")
 
-	fmt.Println("userId:", userID)
 	userInfo, err := model.UserTable.GetOneById(userID)
 	if err == sql.ErrNoRows {
 		utils.Fail(ctx, "no this record", nil)
@@ -248,7 +245,7 @@ func GetAllAddress(ctx *gin.Context) {
 
 	addressSlice, err := model.AddressTable.SelectAddressInfoByUserId(userID)
 	if err == sql.ErrNoRows {
-		utils.Success(ctx, "ok", nil)
+		utils.Success(ctx, "none", nil)
 		return
 	} else if err != nil {
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", err)
@@ -267,9 +264,42 @@ func DeleteAddress(ctx *gin.Context) {
 		utils.Fail(ctx, "no this record", nil)
 		return
 	} else if err != nil {
-		fmt.Println(err)
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
+
+	utils.Success(ctx, "ok", nil)
+}
+
+func AdminGetUserInfoByName(ctx *gin.Context) {
+	log.Logger().Info("[AdminGetAllUser] %s", ctx.ClientIP())
+
+	userName := ctx.Query("username")
+	userInfo, err := model.UserTable.GetOneByName(userName)
+	if err == sql.ErrNoRows {
+		utils.Success(ctx, "none", nil)
+		return
+	} else if err != nil {
+		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
+		return
+	}
+
+	utils.Success(ctx, "ok", userInfo)
+}
+
+func AdminUpdateUserRole(ctx *gin.Context) {
+	log.Logger().Info("[AdminUpdateUserRole] %s", ctx.ClientIP())
+
+	userID := ctx.PostForm("uid")
+	newRole := ctx.PostForm("role")
+
+	if _, err := model.UserTable.UpdateUserRoleById(userID, newRole); err == sql.ErrNoRows {
+		utils.Fail(ctx, "no this record", nil)
+		return
+	} else if err != nil {
+		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
+		return
+	}
+
 	utils.Success(ctx, "ok", nil)
 }

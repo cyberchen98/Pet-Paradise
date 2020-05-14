@@ -2,7 +2,6 @@ package impl
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"pet-paradise/log"
@@ -26,23 +25,6 @@ func GetAllOrderInfoByUserId(ctx *gin.Context) {
 	}
 
 	utils.Success(ctx, "ok", orderInfoSlice)
-}
-
-func GetOrderInfoById(ctx *gin.Context) {
-	log.Logger().Info("[GetOrderInfoById] %s", ctx.ClientIP())
-
-	orderID := ctx.Query("oid")
-
-	orderInfo, err := model.OrderTable.GetOneById(orderID)
-	if err == sql.ErrNoRows {
-		utils.Fail(ctx, "no record", nil)
-		return
-	} else if err != nil {
-		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
-		return
-	}
-
-	utils.Success(ctx, "ok", orderInfo)
 }
 
 func DeleteOrderById(ctx *gin.Context) {
@@ -91,7 +73,6 @@ func GenerateOrder(ctx *gin.Context) {
 	newOrderInfo.ProductID = productID
 
 	if _, err := model.OrderTable.InsertNewOrderInfo(newOrderInfo); err != nil {
-		fmt.Println("err:", err)
 		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
 		return
 	}
@@ -122,6 +103,22 @@ func UpdateOrderInfoById(ctx *gin.Context) {
 	}
 
 	utils.Success(ctx, "ok", nil)
+}
+
+func AdminGetOrdersByProductId(ctx *gin.Context) {
+	log.Logger().Info("[AdminGetOrdersByPid] %s", ctx.ClientIP())
+
+	pid := ctx.Query("pid")
+	orderInfo, err := model.OrderTable.SelectOrderInfoByProductId(pid)
+	if err == sql.ErrNoRows {
+		utils.Success(ctx, "none", nil)
+		return
+	} else if err != nil {
+		utils.Response(ctx, http.StatusInternalServerError, "internal error", nil)
+		return
+	}
+
+	utils.Success(ctx, "ok", orderInfo)
 }
 
 func AdminUpdateOrderInfoById(ctx *gin.Context) {

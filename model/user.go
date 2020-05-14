@@ -32,13 +32,13 @@ type UserInfo struct {
 	UpdateTime string `db:"update_time" json:"update_time"`
 }
 
-func (u *userTable) GetAllUserIds(whereCause string) ([]string, error) {
-	query := "SELECT id FROM `" + u.TableName + "` WHERE is_deleted='0' " + whereCause
-	var ids []string
-	if err := u.Select(ids, query); err != nil {
+func (u *userTable) GetAllUsers(whereCause string) ([]string, error) {
+	query := "SELECT user_name FROM `" + u.TableName + "` WHERE is_deleted='0' " + whereCause
+	var names []string
+	if err := u.Select(&names, query); err != nil {
 		return nil, err
 	}
-	return ids, nil
+	return names, nil
 }
 
 func (u *userTable) GetOneByName(userName string) (*UserInfo, error) {
@@ -97,6 +97,10 @@ func (u *userTable) UpdateUserInfoById(userInfo UserInfo, id string) (sql.Result
 
 	keys, values := _updateFiled(userInfoMap)
 	return u.UpdateById(keys, []string{id}, values...)
+}
+
+func (u *userTable) UpdateUserRoleById(id, newRole string) (sql.Result, error) {
+	return u.UpdateById([]string{"role"}, []string{id}, newRole)
 }
 
 func (u *userTable) DeleteUserInfoById(id []string) (sql.Result, error) {
